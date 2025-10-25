@@ -29,56 +29,41 @@ export default function ChatPage() {
     const incomingQuery = location.state?.query || '';
     setQuery(incomingQuery);
     if (incomingQuery) {
-      processQuery(incomingQuery);
+      simulateChatGPTAndSend(incomingQuery);
     }
   }, [location.state]);
 
-  const processQuery = async (userInput) => {
-    setLoading(true);
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4',
-          messages: [
-            {
-              role: 'system',
-              content: 'Extract the city and distances for these amenities if mentioned: bus stops, schools, grocery stores, restaurants, parks, nightlife. Return JSON like: { "city": "CityName", "filters": { "bus": 5, "school": 3, ... } }'
-            },
-            {
-              role: 'user',
-              content: userInput
-            }
-          ]
-        })
-      });
+  const simulateChatGPT = (input) => {
+    return {
+      city: "Austin",
+      filters: {
+        bus: Math.floor(Math.random() * 10) + 1,
+        school: Math.floor(Math.random() * 10) + 1,
+        park: Math.floor(Math.random() * 10) + 1,
+        grocery: Math.floor(Math.random() * 10) + 1,
+        nightlife: Math.floor(Math.random() * 10) + 1,
+        restaurant: Math.floor(Math.random() * 10) + 1,
+      },
+    };
+  };
 
-      const data = await response.json();
-      const result = JSON.parse(data.choices[0].message.content);
-      setParsedCity(result.city || '');
-      setAmenityRadii(result.filters || {});
+  const simulateChatGPTAndSend = async (inputText) => {
+    const simulatedParsed = simulateChatGPT(inputText);
+    setParsedCity(simulatedParsed.city);
+    setAmenityRadii(simulatedParsed.filters);
 
-      const initialActive = {};
-      Object.keys(result.filters || {}).forEach((key) => {
-        initialActive[key] = true;
-      });
-      setActiveFilters((prev) => ({ ...prev, ...initialActive }));
+    const initialActive = {};
+    Object.keys(simulatedParsed.filters).forEach((key) => {
+      initialActive[key] = true;
+    });
+    setActiveFilters((prev) => ({ ...prev, ...initialActive }));
 
-      callBackendWithCurrentFilters(result.filters || {}, initialActive, result.city);
-    } catch (err) {
-      console.error('Error processing query:', err);
-    } finally {
-      setLoading(false);
-    }
+    callBackendWithCurrentFilters(simulatedParsed.filters, initialActive, simulatedParsed.city);
   };
 
   const handleNewQuerySubmit = () => {
     if (query.trim()) {
-      processQuery(query);
+      simulateChatGPTAndSend(query);
     }
   };
 
