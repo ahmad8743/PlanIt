@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import './Landing.css'; // reuse styling
+import '../styles/Landing.css'; // reuse styling
 
 const amenities = [
   { id: 'bus', label: 'Bus Stops', icon: '🚌' },

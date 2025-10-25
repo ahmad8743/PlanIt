@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Landing.css';
+import '../styles/Landing.css';
 
 // Icon Components (unchanged)
 const AiIcon = () => <span>✨</span>;
