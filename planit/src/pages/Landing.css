@@ -350,3 +350,40 @@
   .amenities-preview {
     display: none;
   }
+
+  .heatmap-title {
+    text-align: center;
+    margin-top: 120px;
+    font-size: 2rem;
+    color: var(--text-color);
+  }
+
+  .search-button-chat {
+    margin-top: 20px;
+    border-radius: 8px;
+  }
+
+  .amenity-checkbox {
+    transform: scale(1.2);
+    margin-right: 0.5rem;
+  }
+  /* Checkbox stays active, slider section dims when unchecked */
+.amenity-slider-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.amenity-item {
+  margin-bottom: 1rem;
+  transition: opacity 0.3s ease;
+}
+
+.amenity-checkbox {
+  transform: scale(1.1);
+  margin-right: 0.5rem;
+}
+
+.slider-container {
+  margin-top: 0.5rem;
+}
