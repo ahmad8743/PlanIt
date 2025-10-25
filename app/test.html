@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<!--
+ @license
+ Copyright 2025 Google LLC. All Rights Reserved.
+ SPDX-License-Identifier: Apache-2.0
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Add a Map (DIV version)</title>
+
+    <!-- Your app entry -->
+    <script type="module" src="./heatmap.js"></script>
+
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+      }
+      /* The DIV that will host the map */
+      #map {
+        width: 1000px;
+        height: 700px;
+        margin: 20px auto; /* center horizontally */
+        border: 2px solid #ccc;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Map container -->
+    <div id="map"></div>
+  </body>
+</html>
