@@ -27,3 +27,16 @@ def process_filters(data: FilterRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/update-from-sliders")
+def update_from_sliders(data: FilterRequest):
+    result_array = generate_heatmap_array(data.city, data.filters)
+    return {
+        "status": "success",
+        "city": data.city,
+        "heatmap": result_array.tolist()
+    }
+
+
+
+
