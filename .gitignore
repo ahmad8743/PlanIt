@@ -4,3 +4,4 @@ creds.py
 __pycache__/
 new_coordinates.csv
 .DS_Store
+package-lock.json
