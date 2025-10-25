@@ -141,9 +141,22 @@ class _SigLIPBase(BaseFeatureExtractor):
     def _init_common(self, model_name, device):
         from transformers import AutoProcessor, AutoModel
         self.model_name, self.device = model_name, device
-        self.processor = AutoProcessor.from_pretrained(model_name, use_fast=False)
-        self.model     = AutoModel.from_pretrained(model_name, trust_remote_code=True) \
-                                     .to(device).eval()
+        
+        # Use AutoModel for SigLIP2 models to avoid class mismatch issues
+        self.model = AutoModel.from_pretrained(model_name, trust_remote_code=True).to(device).eval()
+        
+        # Try to get processor, fallback to model's processor if available
+        try:
+            self.processor = AutoProcessor.from_pretrained(model_name, use_fast=False)
+        except ValueError:
+            # If processor fails, try to get it from the model's config
+            if hasattr(self.model, 'processor'):
+                self.processor = self.model.processor
+            else:
+                # Create a basic processor for text-only processing
+                from transformers import AutoTokenizer
+                self.processor = AutoTokenizer.from_pretrained(model_name)
+        
         self._feature_dim = self.MODEL_HIDDEN_SIZES.get(model_name, 768)
         
         # Disable gradient computation for all parameters (performance)

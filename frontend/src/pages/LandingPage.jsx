@@ -67,6 +67,7 @@ export default function LandingPage() {
           <div className="nav-links">
             <a href="#features">Features</a>
             <a href="#how-it-works">How It Works</a>
+            <a href="/search" onClick={(e) => { e.preventDefault(); navigate('/search'); }}>Search</a>
           </div>
         </div>
       </nav>
@@ -91,6 +92,13 @@ export default function LandingPage() {
             />
             <button className="search-button" onClick={handleGenerateClick}>
               Generate Heatmap
+            </button>
+            <button 
+              className="search-button" 
+              style={{ marginLeft: '10px', backgroundColor: '#28a745' }}
+              onClick={() => navigate('/search')}
+            >
+              AI Search
             </button>
           </div>
         </div>

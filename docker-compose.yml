@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # Backend API service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app/backend
+      - ./app:/app/app
+      - ./images:/app/images
+      - ./models:/app/models
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend development service
+  frontend:
+    image: node:18-alpine
+    working_dir: /app/frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+    working_dir: /app/frontend
+    command: sh -c "npm install && npm start"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Street View sampling service (optional)
+  streetview:
+    build:
+      context: .
+      dockerfile: Dockerfile.streetview
+    volumes:
+      - ./street-view-sampling:/app/street-view-sampling
+      - ./images:/app/images
+    env_file:
+      - .env
+    profiles:
+      - streetview
+    restart: "no"
+
+# Networks
+networks:
+  default:
+    name: planit-network
