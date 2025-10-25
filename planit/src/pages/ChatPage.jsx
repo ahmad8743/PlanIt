@@ -1,8 +1,12 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom'; // Import useLocation
 
 export default function ChatPage() {
+  const location = useLocation(); // Get the location object
+  
+  // Set the initial input state from the location state, or default to empty
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState(location.state?.query || '');
 
   const handleUserMessage = async () => {
     if (!input.trim()) return;
