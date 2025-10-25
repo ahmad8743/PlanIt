@@ -3,3 +3,4 @@ stl_imgs.zip
 creds.py
 __pycache__/
 new_coordinates.csv
+.DS_Store
