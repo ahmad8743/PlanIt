@@ -11,13 +11,51 @@ export default function LandingPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
-  const handleGenerateClick = () => {
-    if (!searchQuery.trim()) return;
-    navigate('/chat', {
-      state: {
-        query: searchQuery,
+  const simulateChatGPT = (input) => {
+    // You could randomly extract a fake city and distances
+    return {
+      city: "Austin",
+      filters: {
+        bus: Math.floor(Math.random() * 10) + 1,
+        school: Math.floor(Math.random() * 10) + 1,
+        park: Math.floor(Math.random() * 10) + 1,
+        grocery: Math.floor(Math.random() * 10) + 1,
+        nightlife: Math.floor(Math.random() * 10) + 1,
+        restaurant: Math.floor(Math.random() * 10) + 1,
       },
-    });
+    };
+  };
+
+  const handleGenerateClick = async () => {
+    if (!searchQuery.trim()) return;
+  
+    // 1. Simulate sending to ChatGPT → return fake JSON
+    const simulatedParsed = simulateChatGPT(searchQuery);
+  
+    // 2. Send JSON to FastAPI backend
+    try {
+      const response = await fetch("http://localhost:8000/api/process-filters", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(simulatedParsed),
+      });
+  
+      const data = await response.json();
+  
+      // 3. Navigate to /chat with backend response + original query
+      navigate("/chat", {
+        state: {
+          query: searchQuery,
+          parsedCity: data.city,
+          heatmapArray: data.heatmap,
+          filters: simulatedParsed.filters,
+        },
+      });
+    } catch (error) {
+      console.error("Error calling backend:", error);
+    }
   };
 
   return (
