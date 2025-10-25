@@ -5,3 +5,7 @@ __pycache__/
 new_coordinates.csv
 .DS_Store
 package-lock.json
+
+creds.js
+.vscode/
+heatmap_test.json
