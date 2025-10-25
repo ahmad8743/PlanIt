@@ -1,12 +1,39 @@
-import { useState } from 'react';
-import { useLocation } from 'react-router-dom'; // Import useLocation
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export default function ChatPage() {
-  const location = useLocation(); // Get the location object
+  const location = useLocation();
   
-  // Set the initial input state from the location state, or default to empty
-  const [messages, setMessages] = useState([]);
+  // Set the initial input state ONLY from the query
   const [input, setInput] = useState(location.state?.query || '');
+  
+  // We'll set messages in a useEffect to handle the initial context
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    const query = location.state?.query;
+    const radii = location.state?.radii;
+
+    if (query || radii) {
+      let initialMessage = `Starting search for "${query || 'your location'}" with these settings:`;
+      
+      if (radii) {
+        // Build a string from the radii object
+        const radiiSummary = Object.entries(radii)
+          .map(([key, value]) => `${key}: ${value} mi`)
+          .join(', ');
+        initialMessage += `\nRadii: [${radiiSummary}]`;
+      }
+
+      // Add this summary as the first message from the "assistant"
+      setMessages([
+        { 
+          role: 'assistant', 
+          content: initialMessage 
+        }
+      ]);
+    }
+  }, [location.state]); // This effect runs once when the page loads
 
   const handleUserMessage = async () => {
     if (!input.trim()) return;
@@ -17,11 +44,8 @@ export default function ChatPage() {
 
     // Placeholder for OpenAI API call
     try {
-      // For now, just echo the message
       const fakeResponse = `You said: "${input}"`;
       setMessages([...newMessages, { role: 'assistant', content: fakeResponse }]);
-
-      // Later: replace with actual OpenAI call
     } catch (err) {
       console.error('API Error:', err);
     }
@@ -38,7 +62,8 @@ export default function ChatPage() {
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`p-2 rounded-lg w-fit max-w-xl ${
+            // Use whitespace-pre-wrap to respect newlines in the initial message
+            className={`p-2 rounded-lg w-fit max-w-xl whitespace-pre-wrap ${
               msg.role === 'user' ? 'bg-blue-200 self-end ml-auto' : 'bg-gray-200'
             }`}
           >

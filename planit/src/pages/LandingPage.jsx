@@ -1,25 +1,54 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import './Landing.css';
 
-// ... (icon components are unchanged)
-const BusIcon = () => <span>🚌</span>;
-const SchoolIcon = () => <span>🏫</span>;
-const StoreIcon = () => <span>🛒</span>;
-const RestaurantIcon = () => <span>🍽️</span>;
-const ParkIcon = () => <span>🌳</span>;
-const NightlifeIcon = () => <span>🌃</span>;
+// --- Amenity Configuration ---
+// We use an array to easily map over and render them
+const amenities = [
+  { id: 'bus', label: 'Bus Stops', icon: '🚌' },
+  { id: 'school', label: 'Schools', icon: '🏫' },
+  { id: 'store', label: 'Grocery', icon: '🛒' },
+  { id: 'restaurant', label: 'Restaurants', icon: '🍽️' },
+  { id: 'park', label: 'Parks', icon: '🌳' },
+  { id: 'nightlife', label: 'Nightlife', icon: '🌃' },
+];
+
+// --- Icon Components ---
 const AiIcon = () => <span>✨</span>;
 const MapIcon = () => <span>🗺️</span>;
 const DataIcon = () => <span>📊</span>;
 
 export default function LandingPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const navigate = useNavigate(); 
+  
+  // New state to hold all radius values, keyed by amenity id
+  const [amenityRadii, setAmenityRadii] = useState({
+    bus: 5,
+    school: 5,
+    store: 5,
+    restaurant: 5,
+    park: 5,
+    nightlife: 5,
+  });
+
+  const navigate = useNavigate();
+
+  // Handler to update the radius for a specific amenity
+  const handleRadiusChange = (id, value) => {
+    setAmenityRadii(prevRadii => ({
+      ...prevRadii,
+      [id]: value,
+    }));
+  };
 
   const handleGenerateClick = () => {
-    // UPDATED: Pass the searchQuery in the 'state' object
-    navigate('/chat', { state: { query: searchQuery } });
+    // Pass both the query and the radii object to the chat page
+    navigate('/chat', {
+      state: {
+        query: searchQuery,
+        radii: amenityRadii,
+      },
+    });
   };
 
   return (
@@ -59,21 +88,37 @@ export default function LandingPage() {
             </button>
           </div>
           
-          <div className="amenities-preview">
-            <span><BusIcon /> Bus Stops</span>
-            <span><SchoolIcon /> Schools</span>
-            <span><StoreIcon /> Grocery</span>
-            <span><RestaurantIcon /> Restaurants</span>
-            <span><ParkIcon /> Parks</span>
-            <span><NightlifeIcon /> Nightlife</span>
+          {/* --- New Amenities Section with Sliders --- */}
+          <div className="amenities-container">
+            {amenities.map(amenity => (
+              <div key={amenity.id} className="amenity-item">
+                <label htmlFor={amenity.id} className="amenity-label">
+                  <span>{amenity.icon}</span> {amenity.label}
+                </label>
+                <div className="slider-container">
+                  <input
+                    type="range"
+                    id={amenity.id}
+                    className="amenity-slider"
+                    min="0"
+                    max="25"
+                    step="1"
+                    value={amenityRadii[amenity.id]}
+                    onChange={(e) => handleRadiusChange(amenity.id, e.target.value)}
+                  />
+                  <span className="radius-display">
+                    {amenityRadii[amenity.id]} mi
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </header>
 
-      {/* ... (rest of the landing page sections are unchanged) ... */}
-      
       {/* --- Features Section --- */}
       <section id="features" className="features-section">
+        {/* ... (content is unchanged) ... */}
         <div className="container">
           <h2>Why Choose PlanIt?</h2>
           <div className="features-grid">
@@ -102,6 +147,7 @@ export default function LandingPage() {
 
       {/* --- How It Works Section --- */}
       <section id="how-it-works" className="how-it-works-section">
+        {/* ... (content is unchanged) ... */}
         <div className="container">
           <h2>How It Works in 3 Steps</h2>
           <div className="steps-container">
