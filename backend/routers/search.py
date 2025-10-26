@@ -12,9 +12,10 @@ load_dotenv()
 
 # Import the feature extractor
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'util', 'street-view-sampling'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'util'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'creds'))
 import creds
-from feature_extractors import SigLIP2FeatureExtractor
+from feature_extractors import FeatureExtractorFactory
 
 router = APIRouter()
 
@@ -38,11 +39,11 @@ class SigLIP2Searcher:
         zilliz_uri = creds.ZILLIZ_URI
         zilliz_token = creds.ZILLIZ_TOKEN
         collection_name = creds.ZILLIZ_COLLECTION
-        model_name = creds.SIGLIP2_MODEL
+        model_name = "google/siglip2-base-patch16-512"  # Hardcoded model name
         
-        # Load SigLIP2 model using feature extractor
+        # Load SigLIP2 model using feature extractor factory
         self.device = torch.device("cpu")  # Force CPU for better compatibility
-        self.extractor = SigLIP2FeatureExtractor(model_name, self.device)
+        self.extractor = FeatureExtractorFactory.create_extractor(model_name, self.device)
         
         # Initialize Zilliz connection if credentials are available
         self.collection = None
@@ -88,7 +89,7 @@ class SigLIP2Searcher:
                 anns_field="embedding",
                 param=search_params,
                 limit=top_k,
-                output_fields=["caption", "id", "path"]
+                output_fields=["id", "caption", "path"]  # Use actual field names
             )
             
             # Format results

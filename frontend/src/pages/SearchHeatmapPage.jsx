@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import GoogleMapsHeatmapV2 from '../components/GoogleMapsHeatmapV2';
 import { searchConfig } from '../config/searchConfig';
+import { getApiEndpoint } from '../config/apiConfig';
 import '../styles/Landing.css';
-
-const API = "https://ec2-3-21-204-210.us-east-2.compute.amazonaws.com:8000";
 
 export default function SearchHeatmapPage() {
   const location = useLocation();
@@ -29,7 +28,7 @@ export default function SearchHeatmapPage() {
     setError(null);
     
     try {
-      const response = await fetch(`${API}/api/search`, {
+      const response = await fetch(getApiEndpoint('/search'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

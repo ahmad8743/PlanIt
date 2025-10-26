@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getApiEndpoint } from '../config/apiConfig';
 import '../styles/Landing.css';
-const API = "https://ec2-3-21-204-210.us-east-2.compute.amazonaws.com:8000";
 
 
 // Icon Components (unchanged)
@@ -36,7 +36,7 @@ export default function LandingPage() {
   
     // 2. Send JSON to FastAPI backend
     try {
-      const response = await fetch(`${API}/api/process-filters`, {
+      const response = await fetch(getApiEndpoint('/process-filters'), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
