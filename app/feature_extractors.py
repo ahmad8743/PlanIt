@@ -56,8 +56,7 @@ class OpenAICLIPFeatureExtractor(BaseFeatureExtractor):
     # ------------------------------------------------------------------ #
     def extract_image_features(self, images) -> torch.Tensor:
         """`images` = list[PIL]  (processor handles resize/crop/normalise)."""
-        device_type = "cuda" if self.device.type == "cuda" else "cpu"
-        with torch.inference_mode(), torch.autocast(device_type=device_type):
+        with torch.inference_mode(), torch.autocast(device_type="cuda"):
             inputs   = self.processor(images=images, return_tensors="pt")
             # Move to device with non_blocking for overlapped data transfer
             inputs   = {k: v.to(self.device, non_blocking=True) for k, v in inputs.items()}
@@ -65,8 +64,7 @@ class OpenAICLIPFeatureExtractor(BaseFeatureExtractor):
             return F.normalize(embeds, dim=-1)
 
     def extract_text_features(self, texts: List[str]) -> torch.Tensor:
-        device_type = "cuda" if self.device.type == "cuda" else "cpu"
-        with torch.inference_mode(), torch.autocast(device_type=device_type):
+        with torch.inference_mode(), torch.autocast(device_type="cuda"):
             inputs = self.processor(text=texts, return_tensors="pt",
                                     padding="max_length", truncation=True)
             # Move to device with non_blocking for overlapped data transfer
@@ -114,14 +112,12 @@ class OpenCLIPFeatureExtractor(BaseFeatureExtractor):
         return tensors.to(self.device, non_blocking=True)
 
     def extract_image_features(self, images) -> torch.Tensor:
-        device_type = "cuda" if self.device.type == "cuda" else "cpu"
-        with torch.inference_mode(), torch.autocast(device_type=device_type):
+        with torch.inference_mode(), torch.autocast(device_type="cuda"):
             embeds = self.model.encode_image(self._preprocess_batch(images))
             return F.normalize(embeds, dim=-1)
 
     def extract_text_features(self, texts: List[str]) -> torch.Tensor:
-        device_type = "cuda" if self.device.type == "cuda" else "cpu"
-        with torch.inference_mode(), torch.autocast(device_type=device_type):
+        with torch.inference_mode(), torch.autocast(device_type="cuda"):
             tokens = self.tokenizer(texts).to(self.device, non_blocking=True)
             embeds = self.model.encode_text(tokens)
             return F.normalize(embeds, dim=-1)
@@ -145,22 +141,9 @@ class _SigLIPBase(BaseFeatureExtractor):
     def _init_common(self, model_name, device):
         from transformers import AutoProcessor, AutoModel
         self.model_name, self.device = model_name, device
-        
-        # Use AutoModel for SigLIP2 models to avoid class mismatch issues
-        self.model = AutoModel.from_pretrained(model_name, trust_remote_code=True).to(device).eval()
-        
-        # Try to get processor, fallback to model's processor if available
-        try:
-            self.processor = AutoProcessor.from_pretrained(model_name, use_fast=False)
-        except ValueError:
-            # If processor fails, try to get it from the model's config
-            if hasattr(self.model, 'processor'):
-                self.processor = self.model.processor
-            else:
-                # Create a basic processor for text-only processing
-                from transformers import AutoTokenizer
-                self.processor = AutoTokenizer.from_pretrained(model_name)
-        
+        self.processor = AutoProcessor.from_pretrained(model_name, use_fast=False)
+        self.model     = AutoModel.from_pretrained(model_name, trust_remote_code=True) \
+                                     .to(device).eval()
         self._feature_dim = self.MODEL_HIDDEN_SIZES.get(model_name, 768)
         
         # Disable gradient computation for all parameters (performance)
@@ -180,8 +163,7 @@ class _SigLIPBase(BaseFeatureExtractor):
 
     # same implementation for image / text across SigLIP flavours
     def extract_image_features(self, images) -> torch.Tensor:
-        device_type = "cuda" if self.device.type == "cuda" else "cpu"
-        with torch.inference_mode(), torch.autocast(device_type=device_type):
+        with torch.inference_mode(), torch.autocast(device_type="cuda"):
             inputs  = self.processor(images=images, return_tensors="pt")
             # Move to device with non_blocking for overlapped data transfer
             inputs  = {k: v.to(self.device, non_blocking=True) for k, v in inputs.items()}
@@ -190,8 +172,7 @@ class _SigLIPBase(BaseFeatureExtractor):
 
     def extract_text_features(self, texts: List[str]) -> torch.Tensor:
         texts = [text.lower() for text in texts]
-        device_type = "cuda" if self.device.type == "cuda" else "cpu"
-        with torch.inference_mode(), torch.autocast(device_type=device_type):
+        with torch.inference_mode(), torch.autocast(device_type="cuda"):
             inputs = self.processor(text=texts, return_tensors="pt",
                                     padding="max_length", truncation=True, max_length=self._max_text_length)
             # Move to device with non_blocking for overlapped data transfer
