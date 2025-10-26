@@ -12,7 +12,8 @@ load_dotenv()
 
 # Import the feature extractor
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'app'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'util'))
+import creds
 from feature_extractors import SigLIP2FeatureExtractor
 
 router = APIRouter()
@@ -34,10 +35,10 @@ class SigLIP2Searcher:
     def __init__(self):
         """Initialize searcher with environment variables."""
         # Get configuration from environment
-        zilliz_uri = os.getenv("ZILLIZ_URI")
-        zilliz_token = os.getenv("ZILLIZ_TOKEN")
-        collection_name = os.getenv("ZILLIZ_COLLECTION", "planit_siglip2")
-        model_name = os.getenv("SIGLIP2_MODEL", "google/siglip2-base-patch16-224")
+        zilliz_uri = creds.ZILLIZ_URI
+        zilliz_token = creds.ZILLIZ_TOKEN
+        collection_name = creds.ZILLIZ_COLLECTION
+        model_name = creds.SIGLIP2_MODEL
         
         # Load SigLIP2 model using feature extractor
         self.device = torch.device("cpu")  # Force CPU for better compatibility
