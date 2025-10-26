@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import '../styles/Landing.css';
+const API = "https://ec2-3-21-204-210.us-east-2.compute.amazonaws.com:8000";
+
 
 const amenities = [
   { id: 'bus', label: 'Bus Stops', icon: '🚌' },
@@ -97,7 +99,7 @@ export default function ChatPage() {
       }
     }
     try {
-      const res = await fetch('http://localhost:8000/api/update-from-sliders', {
+      const res = await fetch(`${API}/api/update-from-sliders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ city, filters: active })

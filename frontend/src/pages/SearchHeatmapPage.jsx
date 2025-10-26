@@ -4,6 +4,8 @@ import GoogleMapsHeatmapV2 from '../components/GoogleMapsHeatmapV2';
 import { searchConfig } from '../config/searchConfig';
 import '../styles/Landing.css';
 
+const API = "https://ec2-3-21-204-210.us-east-2.compute.amazonaws.com:8000";
+
 export default function SearchHeatmapPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ export default function SearchHeatmapPage() {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:8000/api/search', {
+      const response = await fetch(`${API}/api/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
