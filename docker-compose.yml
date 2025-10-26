@@ -36,7 +36,7 @@ services:
     volumes:
       - ./frontend:/app/frontend
       - /app/frontend/node_modules
-    working_dir: /app/frontend
+    #working_dir: /app/frontend
     command: sh -c "npm install && npm start"
     environment:
       - CHOKIDAR_USEPOLLING=true
