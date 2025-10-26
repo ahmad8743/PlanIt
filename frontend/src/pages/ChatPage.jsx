@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import GoogleMapsHeatmapV2 from '../components/GoogleMapsHeatmapV2';
 import '../styles/Landing.css';
+import { searchConfig } from '../config/searchConfig';
 
 const amenities = [
   { id: 'bus', label: 'Bus Stops', icon: '🚌' },
@@ -11,8 +13,9 @@ const amenities = [
   { id: 'nightlife', label: 'Nightlife', icon: '🌃' },
 ];
 
-export default function ChatPage() {
+export default function SearchHeatmapWithSliders() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [parsedCity, setParsedCity] = useState('');
   const [amenityRadii, setAmenityRadii] = useState({});
@@ -22,6 +25,8 @@ export default function ChatPage() {
     return initial;
   });
   const [heatmapArray, setHeatmapArray] = useState([]);
+const [searchResults, setSearchResults] = useState([]);
+const [returnedQuery, setReturnedQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [updateTimeout, setUpdateTimeout] = useState(null);
 
@@ -89,25 +94,32 @@ export default function ChatPage() {
   };
 
   const callBackendWithCurrentFilters = async (filtersObj, filtersState, cityOverride = null) => {
-    const city = cityOverride || parsedCity;
-    const active = {};
-    for (const key in filtersObj) {
-      if (filtersState[key]) {
-        active[key] = filtersObj[key];
-      }
+  const city = cityOverride || parsedCity;
+  const active = {};
+  for (const key in filtersObj) {
+    if (filtersState[key]) {
+      active[key] = filtersObj[key];
     }
-    try {
-      const res = await fetch('http://localhost:8000/api/update-from-sliders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ city, filters: active })
-      });
-      const data = await res.json();
-      setHeatmapArray(data.heatmap);
-    } catch (err) {
-      console.error('Backend update failed:', err);
-    }
-  };
+  }
+  try {
+    const res = await fetch('http://localhost:8000/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: query,
+        top_k: searchConfig.topK,
+        softmax_temperature: searchConfig.softmaxTemperature
+      }),
+    });
+    const data = await res.json();
+
+    setReturnedQuery(data.query);
+    setSearchResults(data.results);
+    setHeatmapArray(data.heatmap_scores);
+  } catch (err) {
+    console.error('Backend update failed:', err);
+  }
+};
 
   return (
     <div className="App chat-page">
@@ -117,6 +129,7 @@ export default function ChatPage() {
         </div>
       </nav>
 
+      {/* --- Heatmap --- */}
       <div className="chat-heatmap-container">
         <div className="container">
           <h1 className="heatmap-title">AI-Generated Heatmap</h1>
@@ -125,11 +138,29 @@ export default function ChatPage() {
           </p>
 
           <div className="heatmap-box">
-            {loading ? <span>Loading...</span> : <span>🗺️ Heatmap Preview Area</span>}
+            {/* --- Display Search Results --- */}
+              {searchResults.length > 0 && (
+                <div className="container" style={{ marginTop: '20px' }}>
+                  <h3>Returned Results</h3>
+                  <p><strong>Query:</strong> {returnedQuery}</p>
+                  <ul style={{ listStyleType: 'disc', paddingLeft: '20px' }}>
+                    {searchResults.slice(0, 5).map((res, i) => (
+                      <li key={res.id}>
+                        <strong>{res.caption}</strong> (Score: {res.score.toFixed(2)}, 
+                        Lat: {res.coordinates?.lat}, Lng: {res.coordinates?.lng})
+                      </li>
+                    ))}
+                  </ul>
+                  <p style={{ fontSize: '0.9em', color: '#888' }}>
+                    Showing top {Math.min(searchResults.length, 5)} of {searchResults.length} results
+                  </p>
+                </div>
+              )}
           </div>
         </div>
       </div>
 
+      {/* --- Text Input --- */}
       <div className="container">
         <input
           type="text"
@@ -143,6 +174,7 @@ export default function ChatPage() {
         </button>
       </div>
 
+      {/* --- Sliders --- */}
       <div className="chat-sliders-section">
         <div className="container">
           <h2>Adjust Preferences</h2>
