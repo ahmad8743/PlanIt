@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Landing.css';
+import { searchConfig } from '../config/searchConfig';
 
 // Icon Components (unchanged)
 const AiIcon = () => <span>✨</span>;
@@ -27,32 +28,37 @@ export default function LandingPage() {
   };
 
   const handleGenerateClick = async () => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim()) {
+      return;
+    }
   
     // 1. Simulate sending to ChatGPT → return fake JSON
     const simulatedParsed = simulateChatGPT(searchQuery);
   
     // 2. Send JSON to FastAPI backend
     try {
-      const response = await fetch("http://localhost:8000/api/process-filters", {
+      const response = await fetch("http://localhost:8000/api/search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(simulatedParsed),
+        body: JSON.stringify({
+          query: searchQuery,
+          top_k: searchConfig.topK,
+          softmax_temperature: searchConfig.softmaxTemperature
+        }),
       });
   
       const data = await response.json();
   
       // 3. Navigate to /chat with backend response + original query
-      navigate("/chat", {
-        state: {
-          query: searchQuery,
-          parsedCity: data.city,
-          heatmapArray: data.heatmap,
-          filters: simulatedParsed.filters,
-        },
-      });
+     navigate("/chat", {
+  state: {
+    query: data.query,
+    results: data.results,
+    heatmapArray: data.heatmap_scores,
+  },
+});
     } catch (error) {
       console.error("Error calling backend:", error);
     }

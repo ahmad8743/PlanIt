@@ -30,13 +30,15 @@ const [returnedQuery, setReturnedQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [updateTimeout, setUpdateTimeout] = useState(null);
 
-  useEffect(() => {
-    const incomingQuery = location.state?.query || '';
-    setQuery(incomingQuery);
-    if (incomingQuery) {
-      simulateChatGPTAndSend(incomingQuery);
-    }
-  }, [location.state]);
+const [hasInitialized, setHasInitialized] = useState(false);
+
+useEffect(() => {
+  if (!hasInitialized && location.state?.query) {
+    setHasInitialized(true);
+    setQuery(location.state.query);
+    //simulateChatGPTAndSend(location.state.query);
+  }
+}, [hasInitialized, location.state]);
 
   const simulateChatGPT = (input) => {
     return {
@@ -52,19 +54,21 @@ const [returnedQuery, setReturnedQuery] = useState('');
     };
   };
 
-  const simulateChatGPTAndSend = async (inputText) => {
-    const simulatedParsed = simulateChatGPT(inputText);
-    setParsedCity(simulatedParsed.city);
-    setAmenityRadii(simulatedParsed.filters);
+const simulateChatGPTAndSend = async (inputText) => {
+  if (!inputText || inputText.trim() === '') return;
 
-    const initialActive = {};
-    Object.keys(simulatedParsed.filters).forEach((key) => {
-      initialActive[key] = true;
-    });
-    setActiveFilters((prev) => ({ ...prev, ...initialActive }));
+  const simulatedParsed = simulateChatGPT(inputText);
+  setParsedCity(simulatedParsed.city);
+  setAmenityRadii(simulatedParsed.filters);
 
-    callBackendWithCurrentFilters(simulatedParsed.filters, initialActive, simulatedParsed.city);
-  };
+  const initialActive = {};
+  Object.keys(simulatedParsed.filters).forEach((key) => {
+    initialActive[key] = true;
+  });
+  setActiveFilters((prev) => ({ ...prev, ...initialActive }));
+
+  callBackendWithCurrentFilters(simulatedParsed.filters, initialActive, simulatedParsed.city);
+};
 
   const handleNewQuerySubmit = () => {
     if (query.trim()) {
