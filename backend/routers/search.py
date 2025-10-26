@@ -47,6 +47,8 @@ class SigLIP2Searcher:
         
         # Initialize Zilliz connection if credentials are available
         self.collection = None
+        self.schema_info = None
+        
         if zilliz_uri and zilliz_token:
             try:
                 # Connect to Zilliz
@@ -59,12 +61,38 @@ class SigLIP2Searcher:
                 # Load collection
                 self.collection = Collection(collection_name)
                 self.collection.load()
+                
+                # Detect schema to determine available fields
+                self.schema_info = self._detect_schema()
+                
                 print(f"✅ Connected to Zilliz collection: {collection_name}")
+                print(f"📊 Schema detected: {self.schema_info}")
             except Exception as e:
                 print(f"⚠️  Failed to connect to Zilliz: {e}")
                 print("Using mock search mode")
         else:
             print("⚠️  Zilliz credentials not found. Using mock search mode")
+    
+    def _detect_schema(self):
+        """Detect the schema of the collection to determine available fields."""
+        if not self.collection:
+            return None
+            
+        schema = self.collection.schema
+        field_names = [field.name for field in schema.fields]
+        
+        schema_info = {
+            'fields': field_names,
+            'has_caption': 'caption' in field_names,
+            'has_path': 'path' in field_names,
+            'has_lat': 'lat' in field_names,
+            'has_lon': 'lon' in field_names,
+            'has_lng': 'lng' in field_names,
+            'has_grid_i': 'grid_i' in field_names,
+            'has_grid_j': 'grid_j' in field_names
+        }
+        
+        return schema_info
     
     def encode_text(self, text: str) -> np.ndarray:
         """Encode text to embedding using SigLIP2."""
@@ -83,13 +111,30 @@ class SigLIP2Searcher:
                 "params": {"ef": 128}
             }
             
+            # Determine output fields based on schema
+            output_fields = ["id"]  # Always include ID
+            
+            if self.schema_info:
+                if self.schema_info['has_caption']:
+                    output_fields.append("caption")
+                if self.schema_info['has_path']:
+                    output_fields.append("path")
+                if self.schema_info['has_lat']:
+                    output_fields.append("lat")
+                if self.schema_info['has_lon']:
+                    output_fields.append("lon")
+                elif self.schema_info['has_lng']:
+                    output_fields.append("lng")
+            
+            print(f"🔍 Requesting fields: {output_fields}")
+            
             # Perform search
             results = self.collection.search(
                 data=query_embedding.tolist(),
                 anns_field="embedding",
                 param=search_params,
                 limit=top_k,
-                output_fields=["id", "caption", "path"]  # Use actual field names
+                output_fields=output_fields
             )
             
             # Format results
@@ -108,8 +153,8 @@ class SigLIP2Searcher:
                     
                     matches.append({
                         'id': hit.id,
-                        'caption': hit.entity.get('caption'),
-                        'path': hit.entity.get('path'),
+                        'caption': f"Location at {lat:.4f}, {lng:.4f}" if lat and lng else f"Location {hit.id}",
+                        'path': f"/location/{hit.id}",
                         'score': float(hit.score),
                         'distance': float(hit.distance),
                         'coordinates': {
@@ -162,7 +207,7 @@ def get_searcher():
     return searcher
 
 def apply_softmax(scores: List[float], temperature: float = 1.0) -> List[float]:
-    """Apply softmax to scores for heatmap visualization."""
+    """Apply min-max normalization with temperature scaling for heatmap visualization."""
     if not scores:
         return []
     
@@ -172,11 +217,21 @@ def apply_softmax(scores: List[float], temperature: float = 1.0) -> List[float]:
     # Apply temperature scaling
     scaled_scores = scores_array / temperature
     
-    # Apply softmax
-    exp_scores = np.exp(scaled_scores - np.max(scaled_scores))  # Subtract max for numerical stability
-    softmax_scores = exp_scores / np.sum(exp_scores)
+    # Apply min-max normalization instead of softmax for better visualization
+    min_score = np.min(scaled_scores)
+    max_score = np.max(scaled_scores)
     
-    return softmax_scores.tolist()
+    if max_score == min_score:
+        # All scores are the same, return uniform distribution
+        return [1.0 / len(scores)] * len(scores)
+    
+    # Normalize to [0, 1] range
+    normalized_scores = (scaled_scores - min_score) / (max_score - min_score)
+    
+    # Scale to make heatmap more visible (multiply by 10 to make values more prominent)
+    scaled_normalized = normalized_scores * 10
+    
+    return scaled_normalized.tolist()
 
 @router.post("/search", response_model=SearchResponse)
 def search_locations(request: SearchRequest):
