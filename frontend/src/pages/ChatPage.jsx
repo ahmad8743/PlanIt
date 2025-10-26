@@ -16,7 +16,6 @@ const extractCityAndFilters = async (text) => {
   return data;
 };
 
-
 const amenities = [
   { id: 'bus', label: 'Bus Stops', icon: '🚌' },
   { id: 'school', label: 'Schools', icon: '🏫' },
@@ -29,7 +28,6 @@ const amenities = [
 export default function SearchHeatmapWithSliders() {
   const location = useLocation();
   const navigate = useNavigate();
-const [heatmapScores, setHeatmapScores] = useState([]);
   const [query, setQuery] = useState('');
   const [parsedCity, setParsedCity] = useState('');
   const [amenityRadii, setAmenityRadii] = useState({});
@@ -39,63 +37,54 @@ const [heatmapScores, setHeatmapScores] = useState([]);
     return initial;
   });
   const [searchResults, setSearchResults] = useState([]);
-const [returnedQuery, setReturnedQuery] = useState('');
+  const [allAmenityScores, setAllAmenityScores] = useState({});
   const [loading, setLoading] = useState(false);
   const [updateTimeout, setUpdateTimeout] = useState(null);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-const [hasInitialized, setHasInitialized] = useState(false);
+  useEffect(() => {
+    if (!hasInitialized && location.state?.query) {
+      setHasInitialized(true);
+      setQuery(location.state.query);
 
-useEffect(() => {
-  if (!hasInitialized && location.state?.query) {
-    setHasInitialized(true);
-    setQuery(location.state.query);
+      const incomingFilters = location.state.filters || {};
+      const incomingCity = location.state.city || '';
+      const incomingActiveFilters = location.state.activeFilters || {};
 
-    // ✅ Load filters and city from landing page state
-    const incomingFilters = location.state.filters || {};
-    const incomingCity = location.state.city || '';
-    const incomingActiveFilters = location.state.activeFilters || {};
+      setParsedCity(incomingCity);
+      setAmenityRadii(incomingFilters);
+      setActiveFilters((prev) => ({ ...prev, ...incomingActiveFilters }));
 
-    setParsedCity(incomingCity);
-    setAmenityRadii(incomingFilters);
-    setActiveFilters((prev) => ({ ...prev, ...incomingActiveFilters }));
+      callBackendWithCurrentFilters(incomingFilters, incomingActiveFilters, incomingCity);
+    }
+  }, [hasInitialized, location.state]);
 
-    callBackendWithCurrentFilters(incomingFilters, incomingActiveFilters, incomingCity);
-  }
-}, [hasInitialized, location.state]);
+  const simulateChatGPT = (input) => extractCityAndFilters(input);
 
-  
-  const simulateChatGPT = (input) => {
-    return extractCityAndFilters(input);
+  const simulateChatGPTAndSend = async (inputText) => {
+    if (!inputText || inputText.trim() === '') return;
+
+    const simulatedParsed = await simulateChatGPT(inputText);
+    setParsedCity(simulatedParsed.city);
+    setAmenityRadii(simulatedParsed.filters);
+
+    const initialActive = {};
+    Object.keys(simulatedParsed.filters).forEach((key) => {
+      initialActive[key] = true;
+    });
+    setActiveFilters((prev) => ({ ...prev, ...initialActive }));
+
+    callBackendWithCurrentFilters(simulatedParsed.filters, initialActive, simulatedParsed.city);
   };
 
-const simulateChatGPTAndSend = async (inputText) => {
-  if (!inputText || inputText.trim() === '') return;
-
-  const simulatedParsed = await simulateChatGPT(inputText);
-  setParsedCity(simulatedParsed.city);
-  setAmenityRadii(simulatedParsed.filters);
-
-  const initialActive = {};
-  Object.keys(simulatedParsed.filters).forEach((key) => {
-    initialActive[key] = true;
-  });
-  setActiveFilters((prev) => ({ ...prev, ...initialActive }));
-
-  callBackendWithCurrentFilters(simulatedParsed.filters, initialActive, simulatedParsed.city);
-};
-
   const handleNewQuerySubmit = () => {
-    if (query.trim()) {
-      simulateChatGPTAndSend(query);
-    }
+    if (query.trim()) simulateChatGPTAndSend(query);
   };
 
   const toggleAmenity = (id) => {
     setActiveFilters((prev) => {
       const updated = { ...prev, [id]: !prev[id] };
-      setTimeout(() => {
-        callBackendWithCurrentFilters(amenityRadii, updated, parsedCity);
-      }, 0);
+      setTimeout(() => callBackendWithCurrentFilters(amenityRadii, updated, parsedCity), 0);
       return updated;
     });
   };
@@ -105,38 +94,56 @@ const simulateChatGPTAndSend = async (inputText) => {
     setAmenityRadii(updatedRadii);
 
     if (updateTimeout) clearTimeout(updateTimeout);
-    const timeout = setTimeout(() => {
-      callBackendWithCurrentFilters(updatedRadii, activeFilters);
-    }, 1000);
+    const timeout = setTimeout(() => callBackendWithCurrentFilters(updatedRadii, activeFilters), 1000);
     setUpdateTimeout(timeout);
   };
 
   const callBackendWithCurrentFilters = async (filtersObj, filtersState, cityOverride = null) => {
-  const city = cityOverride || parsedCity;
-  const active = {};
-  for (const key in filtersObj) {
-    if (filtersState[key]) {
-      active[key] = filtersObj[key];
+    const city = cityOverride || parsedCity;
+    const active = {};
+    for (const key in filtersObj) {
+      if (filtersState[key]) {
+        active[key] = filtersObj[key];
+      }
+    }
+    try {
+      const res = await fetch(getApiEndpoint('/search'), {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    query: query,
+    top_k: searchConfig.topK,
+    softmax_temperature: searchConfig.softmaxTemperature,
+    filters: filtersObj // 🧠 important
+  }),
+});
+      const data = await res.json();
+      setSearchResults(data.results);
+      setAllAmenityScores(data.heatmap_scores || {});
+    } catch (err) {
+      console.error('Backend update failed:', err);
+    }
+  };
+
+const getCombinedHeatmapScores = () => {
+  if (!searchResults || !allAmenityScores) return [];
+
+  const length = searchResults.length;
+  const combined = new Array(length).fill(0);
+  let activeCount = 0;
+
+  for (const key in allAmenityScores) {
+    if (activeFilters[key]) {
+      const scores = allAmenityScores[key] || [];
+      for (let i = 0; i < length; i++) {
+        combined[i] += scores[i] || 0;
+      }
+      activeCount++;
     }
   }
-  try {
-    const res = await fetch(getApiEndpoint('/search'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: query,
-        top_k: searchConfig.topK,
-        softmax_temperature: searchConfig.softmaxTemperature
-      }),
-    });
-    const data = await res.json();
 
-    setReturnedQuery(data.query);
-    setSearchResults(data.results);
-    setHeatmapScores(data.heatmap_scores);
-  } catch (err) {
-    console.error('Backend update failed:', err);
-  }
+  if (activeCount === 0) return new Array(length).fill(0);
+  return combined.map(val => val / activeCount); // 🎯 average
 };
 
   return (
@@ -147,29 +154,22 @@ const simulateChatGPTAndSend = async (inputText) => {
         </div>
       </nav>
 
-      {/* --- Heatmap --- */}
       <div className="chat-heatmap-container">
         <div className="container">
           <h1 className="heatmap-title">AI-Generated Heatmap</h1>
           <p className="heatmap-subtitle">
             Based on: <strong>{parsedCity || '...'}</strong>
           </p>
-
           <div className="heatmap-box">
-            <div className="heatmap-section">
-  <GoogleMapsHeatmapV2
-    searchResults={searchResults}
-    heatmapScores={heatmapScores}
-    loading={loading}
-  />
-</div>
-            {/* --- Display Search Results --- */}
-             
+            <GoogleMapsHeatmapV2
+              searchResults={searchResults}
+              heatmapScores={getCombinedHeatmapScores()}
+              loading={loading}
+            />
           </div>
         </div>
       </div>
 
-      {/* --- Text Input --- */}
       <div className="container">
         <input
           type="text"
@@ -183,7 +183,6 @@ const simulateChatGPTAndSend = async (inputText) => {
         </button>
       </div>
 
-      {/* --- Sliders --- */}
       <div className="chat-sliders-section">
         <div className="container">
           <h2>Adjust Preferences</h2>

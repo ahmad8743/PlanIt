@@ -23,12 +23,14 @@ class SearchRequest(BaseModel):
     query: str
     top_k: Optional[int] = 50
     softmax_temperature: Optional[float] = 1.0
+    filters: Optional[dict] = None  # Example: {"school": 5, "park": 3}
+
 
 class SearchResponse(BaseModel):
     status: str
     query: str
     results: List[dict]
-    heatmap_scores: List[float]
+    heatmap_scores: dict  # 🧠 now correctly a dict of amenity → [scores]
 
 class SigLIP2Searcher:
     """Search captions using SigLIP2 text embeddings."""
@@ -91,7 +93,7 @@ class SigLIP2Searcher:
     limit=top_k,
     output_fields=["id"]  # ✅ ONLY include fields that exist in the schema
 )
-            
+            print(results)
             # Format results
             matches = []
             for hits in results:
@@ -178,44 +180,57 @@ def apply_softmax(scores: List[float], temperature: float = 1.0) -> List[float]:
 
 @router.post("/search", response_model=SearchResponse)
 def search_locations(request: SearchRequest):
-    """Search for locations using SigLIP2 embeddings."""
+    """
+    Perform one search per active amenity filter and return per-amenity heatmap scores.
+    """
     try:
-        print(f"🔍 Received search request: query='{request.query}', top_k={request.top_k}, temperature={request.softmax_temperature}")
+        print(f"🔍 Received search request: query='{request.query}', filters={request.filters}")
+
         searcher_instance = get_searcher()
-        
-        # Perform search
-        results = searcher_instance.search(request.query, request.top_k)
-        
-        if not results:
+        all_results = []
+        all_scores = {}
+
+        if request.filters:
+            # Run search per amenity
+            for amenity, distance in request.filters.items():
+                subquery = f"{request.query} near {amenity}"
+                print(f"🔎 Searching for amenity '{amenity}' → {subquery}")
+
+                # Perform search
+                results = searcher_instance.search(subquery, request.top_k)
+                scores = [r["score"] for r in results]
+                soft_scores = apply_softmax(scores, temperature=request.softmax_temperature)
+
+                # Save scores by amenity
+                all_scores[amenity] = soft_scores
+
+                # Just grab first result set for now (all results assumed same structure)
+                if not all_results:
+                    all_results = results
+
             return SearchResponse(
                 status="success",
                 query=request.query,
-                results=[],
-                heatmap_scores=[]
+                results=all_results,
+                heatmap_scores=all_scores
             )
-        
-        # Extract scores for softmax
-        scores = [result['score'] for result in results]
-        
-        # Apply softmax to scores
-        heatmap_scores = apply_softmax(scores, temperature=request.softmax_temperature)
-        
-        # Update results with softmax scores
-        for i, result in enumerate(results):
-            result['heatmap_score'] = heatmap_scores[i]
-        
-        print(f"✅ Search completed: {len(results)} results found")
+
+        # Fallback: no filters, basic search
+        results = searcher_instance.search(request.query, request.top_k)
+        scores = [r["score"] for r in results]
+        soft_scores = apply_softmax(scores, temperature=request.softmax_temperature)
+
         return SearchResponse(
             status="success",
             query=request.query,
             results=results,
-            heatmap_scores=heatmap_scores
+            heatmap_scores={"default": soft_scores}
         )
-        
+
     except Exception as e:
         import traceback
-        error_msg = f"Search error: {str(e)}\n{traceback.format_exc()}"
-        print(f"❌ {error_msg}")
+        error_msg = f"❌ Search error: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/health")

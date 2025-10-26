@@ -59,16 +59,16 @@ const handleGenerateClick = async () => {
     const data = await response.json();
 
     // Step 4: Navigate to /chat with everything needed
-    navigate("/chat", {
-      state: {
-        query: searchQuery,
-        results: data.results,
-        heatmapArray: data.heatmap_scores,
-        filters: filters,
-        city: parsedCity,
-        activeFilters: activeFilters
-      },
-    });
+   navigate("/chat", {
+  state: {
+    query: searchQuery,
+    filters: simulatedParsed.filters,
+    city: simulatedParsed.city,
+    activeFilters: Object.fromEntries(
+      Object.keys(simulatedParsed.filters).map(k => [k, true])
+    ),
+  },
+});
 
   } catch (error) {
     console.error("🔥 Error during AI parse or backend search:", error);
