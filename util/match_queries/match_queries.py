@@ -2,7 +2,7 @@
 import json
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'creds'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'backend'))
 from openai import OpenAI
 from creds import OpenAI_KEY
 
@@ -25,8 +25,8 @@ def extract_city_and_filters(prompt: str) -> dict:
     }
     """
     system_prompt = (
-        "You are a helpful assistant that extracts a city and amenities with distances "
-        "from a user's request. Only output JSON in this exact structure:\n\n"
+        "You are a helpful assistant that understands semantically rich filters from a user's geospatial"
+        "search query. Only output JSON in this exact structure:\n\n"
         "{\n"
         "  \"filters\": {\n"
         "    \"category1\": distance_in_miles,\n"
@@ -34,6 +34,7 @@ def extract_city_and_filters(prompt: str) -> dict:
         "  }\n"
         "}\n\n"
         "Include filters even if the user does not give an exact distance. If a category is mentioned as being 'close', 'nearby', or 'within walking distance'. Use reasonable defaults if the user is vague."
+        "Output semantically rich filters with descriptive keywords like 'residential suburban neighborhood' or 'public park greenspace' or '''school education communicty center'"
     )
 
     try:

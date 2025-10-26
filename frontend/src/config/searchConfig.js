@@ -9,6 +9,15 @@ export const searchConfig = {
   // Heatmap intensity multiplier for visualization
   heatmapIntensityMultiplier: 1000,
   
+  // Gaussian Mixture Model filtering parameters
+  gmmFiltering: {
+    enabled: true,
+    nComponents: 3,           // Number of GMM components
+    thresholdPercentile: 0.8, // Keep locations above this percentile of the highest component
+    uniformScore: 1.0,        // Uniform score for filtered locations
+    minSamples: 10            // Minimum samples required for GMM fitting
+  },
+  
   // Default search parameters
   defaultParams: {
     top_k: 1000,

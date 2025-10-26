@@ -6,6 +6,7 @@ from pymilvus import connections, Collection
 import os
 from typing import List, Optional
 from dotenv import load_dotenv
+from sklearn.mixture import GaussianMixture
 
 # Load environment variables
 load_dotenv()
@@ -24,6 +25,11 @@ class SearchRequest(BaseModel):
     top_k: Optional[int] = 50
     softmax_temperature: Optional[float] = 1.0
     filters: Optional[dict] = None  # Example: {"school": 5, "park": 3}
+    gmm_enabled: Optional[bool] = True
+    gmm_n_components: Optional[int] = 3
+    gmm_threshold_percentile: Optional[float] = 0.8
+    gmm_uniform_score: Optional[float] = 1.0
+    gmm_min_samples: Optional[int] = 10
 
 
 class SearchResponse(BaseModel):
@@ -121,27 +127,7 @@ class SigLIP2Searcher:
             
             return matches
         else:
-            # Mock search with SigLIP2 embeddings
-            mock_results = []
-            for i in range(min(top_k, 20)):  # Return up to 20 mock results
-                # Generate mock coordinates around St. Louis area
-                base_lat = 38.6270
-                base_lng = -90.1994
-                lat = base_lat + (i * 0.01 - 0.1)  # Spread around the area
-                lng = base_lng + (i * 0.01 - 0.1)
-                
-                mock_results.append({
-                    'id': f"{lat}_{lng}",
-                    'path': f"/mock/path/{i}",
-                    'score': float(0.9 - (i * 0.05)),  # Decreasing scores
-                    'distance': float(i * 0.1),
-                    'coordinates': {
-                        'lat': lat,
-                        'lng': lng
-                    }
-                })
-            
-            return mock_results
+            raise HTTPException(status_code=500, detail="Failed to connect to Zilliz")
 
 # Global searcher instance
 searcher = None
@@ -178,6 +164,60 @@ def apply_softmax(scores: List[float], temperature: float = 1.0) -> List[float]:
     
     return softmax_scores.tolist()
 
+def apply_gmm_filtering(scores: List[float], n_components: int = 3, 
+                       threshold_percentile: float = 0.8, uniform_score: float = 1.0,
+                       min_samples: int = 10) -> List[float]:
+    """
+    Apply Gaussian Mixture Model filtering to keep only statistically significant high scores.
+    
+    Args:
+        scores: List of similarity scores
+        n_components: Number of GMM components
+        threshold_percentile: Percentile threshold within the highest component
+        uniform_score: Uniform score for filtered locations
+        min_samples: Minimum samples required for GMM fitting
+    
+    Returns:
+        Filtered scores with uniform values for high-scoring locations, 0 for others
+    """
+    if not scores or len(scores) < min_samples:
+        return scores
+    
+    scores_array = np.array(scores).reshape(-1, 1)
+    
+    try:
+        # Fit Gaussian Mixture Model
+        gmm = GaussianMixture(n_components=n_components, random_state=42)
+        gmm.fit(scores_array)
+        
+        # Find the component with the highest mean (highest scoring cluster)
+        component_means = gmm.means_.flatten()
+        highest_component_idx = np.argmax(component_means)
+        
+        # Get the mean and std of the highest component
+        highest_mean = component_means[highest_component_idx]
+        highest_std = np.sqrt(gmm.covariances_[highest_component_idx][0, 0])
+        
+        # Calculate threshold based on percentile within the highest component
+        threshold = highest_mean + (highest_std * np.percentile(
+            np.random.normal(0, 1, 1000), threshold_percentile * 100
+        ))
+        
+        # Create filtered scores
+        filtered_scores = []
+        for score in scores:
+            if score >= threshold:
+                filtered_scores.append(uniform_score)
+            else:
+                filtered_scores.append(0.0)
+        
+        print(f"🔬 GMM Filtering: {sum(1 for s in filtered_scores if s > 0)}/{len(scores)} locations kept above threshold {threshold:.4f}")
+        return filtered_scores
+        
+    except Exception as e:
+        print(f"⚠️ GMM filtering failed: {e}. Using original scores.")
+        return scores
+
 @router.post("/search", response_model=SearchResponse)
 def search_locations(request: SearchRequest):
     """
@@ -200,6 +240,16 @@ def search_locations(request: SearchRequest):
                 results = searcher_instance.search(subquery, request.top_k)
                 scores = [r["score"] for r in results]
                 soft_scores = apply_softmax(scores, temperature=request.softmax_temperature)
+                
+                # Apply GMM filtering if enabled
+                if request.gmm_enabled:
+                    soft_scores = apply_gmm_filtering(
+                        soft_scores,
+                        n_components=request.gmm_n_components,
+                        threshold_percentile=request.gmm_threshold_percentile,
+                        uniform_score=request.gmm_uniform_score,
+                        min_samples=request.gmm_min_samples
+                    )
 
                 # Save scores by amenity
                 all_scores[amenity] = soft_scores
@@ -219,6 +269,16 @@ def search_locations(request: SearchRequest):
         results = searcher_instance.search(request.query, request.top_k)
         scores = [r["score"] for r in results]
         soft_scores = apply_softmax(scores, temperature=request.softmax_temperature)
+        
+        # Apply GMM filtering if enabled
+        if request.gmm_enabled:
+            soft_scores = apply_gmm_filtering(
+                soft_scores,
+                n_components=request.gmm_n_components,
+                threshold_percentile=request.gmm_threshold_percentile,
+                uniform_score=request.gmm_uniform_score,
+                min_samples=request.gmm_min_samples
+            )
 
         return SearchResponse(
             status="success",

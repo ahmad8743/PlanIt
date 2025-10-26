@@ -36,7 +36,12 @@ export default function SearchHeatmapPage() {
         body: JSON.stringify({
           query: query,
           top_k: searchConfig.topK,
-          softmax_temperature: searchConfig.softmaxTemperature
+          softmax_temperature: searchConfig.softmaxTemperature,
+          gmm_enabled: searchConfig.gmmFiltering.enabled,
+          gmm_n_components: searchConfig.gmmFiltering.nComponents,
+          gmm_threshold_percentile: searchConfig.gmmFiltering.thresholdPercentile,
+          gmm_uniform_score: searchConfig.gmmFiltering.uniformScore,
+          gmm_min_samples: searchConfig.gmmFiltering.minSamples
         }),
       });
 

@@ -1,7 +1,7 @@
 /* global google */
 import React, { useState, useEffect, useRef } from 'react';
 import { searchConfig } from '../config/searchConfig';
-const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+import { GOOGLE_MAPS_API_KEY } from '../creds';
 
 const mapContainerStyle = {
   width: '100%',
@@ -13,7 +13,6 @@ const mapContainerStyle = {
 const defaultCenter = searchConfig.map.defaultCenter;
 
 export default function GoogleMapsHeatmapV2({ searchResults, heatmapScores, loading }) {
-  const googleMapsApiKey = GOOGLE_MAPS_API_KEY;
 
   const [heatmapRadius, setHeatmapRadius] = useState(searchConfig.heatmap.defaultRadius);
   const [heatmapOpacity, setHeatmapOpacity] = useState(searchConfig.heatmap.defaultOpacity);
@@ -27,9 +26,8 @@ export default function GoogleMapsHeatmapV2({ searchResults, heatmapScores, load
 
   // Load Google Maps API using the modern importLibrary approach
   useEffect(() => {
-    if (!googleMapsApiKey) {
-      console.log(googleMapsApiKey);
-      console.log("ENV:", process.env);
+    if (!GOOGLE_MAPS_API_KEY) {
+      console.log("Google Maps API Key:", GOOGLE_MAPS_API_KEY);
       setError('Google Maps API key not configured');
       return;
     }
@@ -44,7 +42,7 @@ export default function GoogleMapsHeatmapV2({ searchResults, heatmapScores, load
 
         // Load the Google Maps API using the bootstrap loader
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&v=weekly&loading=async`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&v=weekly&loading=async`;
         script.async = true;
         script.defer = true;
         
@@ -74,7 +72,7 @@ export default function GoogleMapsHeatmapV2({ searchResults, heatmapScores, load
     };
 
     loadGoogleMaps();
-  }, [googleMapsApiKey]);
+  }, [GOOGLE_MAPS_API_KEY]);
 
   // Initialize map using importLibrary
   useEffect(() => {
