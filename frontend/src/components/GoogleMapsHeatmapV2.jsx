@@ -255,11 +255,11 @@ export default function GoogleMapsHeatmapV2({ searchResults, heatmapScores, load
         position: 'absolute', 
         top: '10px', 
         left: '10px', 
-        backgroundColor: 'white', 
+        backgroundColor: 'black', 
         padding: '15px', 
         borderRadius: '8px', 
         boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-        zIndex: 1000,
+  
         minWidth: '200px'
       }}>
         <div style={{ marginBottom: '10px', fontWeight: 'bold', fontSize: '14px' }}>

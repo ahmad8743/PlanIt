@@ -18,6 +18,7 @@ const amenities = [
 export default function SearchHeatmapWithSliders() {
   const location = useLocation();
   const navigate = useNavigate();
+const [heatmapScores, setHeatmapScores] = useState([]);
   const [query, setQuery] = useState('');
   const [parsedCity, setParsedCity] = useState('');
   const [amenityRadii, setAmenityRadii] = useState({});
@@ -144,24 +145,15 @@ const simulateChatGPTAndSend = async (inputText) => {
           </p>
 
           <div className="heatmap-box">
+            <div className="heatmap-section">
+  <GoogleMapsHeatmapV2
+    searchResults={searchResults}
+    heatmapScores={heatmapScores}
+    loading={loading}
+  />
+</div>
             {/* --- Display Search Results --- */}
-              {searchResults.length > 0 && (
-                <div className="container" style={{ marginTop: '20px' }}>
-                  <h3>Returned Results</h3>
-                  <p><strong>Query:</strong> {returnedQuery}</p>
-                  <ul style={{ listStyleType: 'disc', paddingLeft: '20px' }}>
-                    {searchResults.slice(0, 5).map((res, i) => (
-                      <li key={res.id}>
-                        <strong>{res.caption}</strong> (Score: {res.score.toFixed(2)}, 
-                        Lat: {res.coordinates?.lat}, Lng: {res.coordinates?.lng})
-                      </li>
-                    ))}
-                  </ul>
-                  <p style={{ fontSize: '0.9em', color: '#888' }}>
-                    Showing top {Math.min(searchResults.length, 5)} of {searchResults.length} results
-                  </p>
-                </div>
-              )}
+             
           </div>
         </div>
       </div>
