@@ -6,7 +6,7 @@ import '../styles/Landing.css';
 import { searchConfig } from '../config/searchConfig';
 
 const extractCityAndFilters = async (text) => {
-  const res = await fetch('http://localhost:8000/api/extract', {
+  const res = await fetch(getApiEndpoint('/extract'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt: text })

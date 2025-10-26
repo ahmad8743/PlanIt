@@ -10,27 +10,14 @@ from creds import OpenAI_KEY
 client = OpenAI(api_key=OpenAI_KEY)
 
 def extract_city_and_filters(prompt: str) -> dict:
-    """
-    Extracts a JSON object with 'city' and 'filters' (amenities + distances)
-    from a natural language query.
-    
-    Example prompt:
-    "I want a house in Ferguson within 5 miles of a school and 3 miles of a park"
-    Returns:
-    {
-        "filters": {
-            "school": 5,
-            "park": 3
-        }
-    }
-    """
+
     system_prompt = (
         "You are a helpful assistant that understands semantically rich filters from a user's geospatial"
         "search query. Only output JSON in this exact structure:\n\n"
         "{\n"
         "  \"filters\": {\n"
-        "    \"category1\": distance_in_miles,\n"
-        "    \"category2\": distance_in_miles\n"
+        "    \"category1\","
+        "    \"category2\""
         "  }\n"
         "}\n\n"
         "Include filters even if the user does not give an exact distance. If a category is mentioned as being 'close', 'nearby', or 'within walking distance'. Use reasonable defaults if the user is vague."

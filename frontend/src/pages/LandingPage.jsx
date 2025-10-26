@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Landing.css';
 import { searchConfig } from '../config/searchConfig';
+import { getApiEndpoint } from '../config/apiConfig';
+
 
 // Icon Components (unchanged)
 const AiIcon = () => <span>✨</span>;
@@ -10,7 +12,7 @@ const DataIcon = () => <span>📊</span>;
 
 
 const extractCityAndFilters = async (text) => {
-  const res = await fetch('http://localhost:8000/api/extract', {
+  const res = await fetch(getApiEndpoint('/extract'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt: text })
@@ -44,7 +46,7 @@ const handleGenerateClick = async () => {
     });
 
     // Step 3: Send the parsed filters to backend
-    const response = await fetch("http://localhost:8000/api/search", {
+    const response = await fetch(getApiEndpoint('/search'), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

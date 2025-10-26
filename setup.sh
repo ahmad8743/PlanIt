@@ -28,15 +28,14 @@ fi
 
 echo "✅ Python and Node.js versions are compatible"
 
-# Create virtual environment for Python
-echo "📦 Creating Python virtual environment..."
-python3 -m venv venv
-source venv/bin/activate
+# Check if conda environment exists
+if ! conda env list | grep -q "^PlanIt "; then
+    echo "❌ Conda environment 'PlanIt' not found."
+    echo "Please create it with: conda env create -f env.yml"
+    exit 1
+fi
 
-# Install Python dependencies
-echo "📦 Installing Python dependencies..."
-pip install --upgrade pip
-pip install -r requirements.txt
+echo "✅ Conda environment 'PlanIt' found"
 
 # Install frontend dependencies
 echo "📦 Installing frontend dependencies..."

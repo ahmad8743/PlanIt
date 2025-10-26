@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 import sys
 import os
 
@@ -19,7 +19,7 @@ class ExtractRequest(BaseModel):
 
 class ExtractResponse(BaseModel):
     city: Optional[str]
-    filters: Dict[str, float]
+    filters: Dict[str, Any]
 
 @router.post("/extract", response_model=ExtractResponse)
 def extract_from_prompt(request: ExtractRequest):

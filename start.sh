@@ -3,14 +3,18 @@
 # PlanIt Development Server Startup Script
 echo "🚀 Starting PlanIt development environment..."
 
-# Check if virtual environment exists
-if [ ! -d "venv" ]; then
-    echo "❌ Virtual environment not found. Please run './setup.sh' first."
+# Initialize conda for bash shell
+eval "$(conda shell.bash hook)"
+
+# Activate conda environment
+echo "🐍 Activating conda environment 'PlanIt'..."
+conda activate PlanIt
+
+if [ $? -ne 0 ]; then
+    echo "❌ Failed to activate conda environment 'PlanIt'"
+    echo "Please make sure the environment exists and run './setup.sh' first."
     exit 1
 fi
-
-# Activate virtual environment
-source venv/bin/activate
 
 
 # Start backend in background
