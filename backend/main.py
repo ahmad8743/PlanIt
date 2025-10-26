@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from routers import filters, search
 from fastapi.middleware.cors import CORSMiddleware
+from routers import extract_filters  # Add this import
+
+
 
 app = FastAPI(
     title="PlanIt API",
@@ -20,7 +23,9 @@ app.add_middleware(
 # Include routers
 app.include_router(filters.router, prefix="/api")
 app.include_router(search.router, prefix="/api")
+app.include_router(extract_filters.router, prefix="/api")
 
 @app.get("/")
 def root():
     return {"message": "PlanIt API is running", "docs": "/docs"}
+

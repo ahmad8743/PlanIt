@@ -1,7 +1,7 @@
 # extract_filters.py
 import json
 from openai import OpenAI
-from apikeys import OpenAI_KEY
+from .apikeys import OpenAI_KEY
 
 # Initialize OpenAI client
 client = OpenAI(api_key=OpenAI_KEY)
@@ -41,8 +41,7 @@ def extract_city_and_filters(prompt: str) -> dict:
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt}
-            ],
-            temperature=0.2
+            ]
         )
 
         raw_content = response.choices[0].message.content.strip()

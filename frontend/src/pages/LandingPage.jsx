@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getApiEndpoint } from '../config/apiConfig';
 import '../styles/Landing.css';
 import { searchConfig } from '../config/searchConfig';
 
@@ -9,23 +8,24 @@ const AiIcon = () => <span>✨</span>;
 const MapIcon = () => <span>🗺️</span>;
 const DataIcon = () => <span>📊</span>;
 
+
+const extractCityAndFilters = async (text) => {
+  const res = await fetch('http://localhost:8000/api/extract', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: text })
+  });
+  const data = await res.json();
+  console.log("🧠 Extracted filters:", data);
+  return data;
+};
+
 export default function LandingPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
   const simulateChatGPT = (input) => {
-    // You could randomly extract a fake city and distances
-    return {
-      city: "Austin",
-      filters: {
-        bus: Math.floor(Math.random() * 10) + 1,
-        school: Math.floor(Math.random() * 10) + 1,
-        park: Math.floor(Math.random() * 10) + 1,
-        grocery: Math.floor(Math.random() * 10) + 1,
-        nightlife: Math.floor(Math.random() * 10) + 1,
-        restaurant: Math.floor(Math.random() * 10) + 1,
-      },
-    };
+    return extractCityAndFilters(input);
   };
 
   const handleGenerateClick = async () => {

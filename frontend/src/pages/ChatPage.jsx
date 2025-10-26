@@ -5,6 +5,17 @@ import GoogleMapsHeatmapV2 from '../components/GoogleMapsHeatmapV2';
 import '../styles/Landing.css';
 import { searchConfig } from '../config/searchConfig';
 
+const extractCityAndFilters = async (text) => {
+  const res = await fetch('http://localhost:8000/api/extract', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: text })
+  });
+  const data = await res.json();
+  console.log("🧠 Extracted filters:", data);
+  return data;
+};
+
 
 const amenities = [
   { id: 'bus', label: 'Bus Stops', icon: '🚌' },
@@ -43,18 +54,9 @@ useEffect(() => {
   }
 }, [hasInitialized, location.state]);
 
+  
   const simulateChatGPT = (input) => {
-    return {
-      city: "Austin",
-      filters: {
-        bus: Math.floor(Math.random() * 10) + 1,
-        school: Math.floor(Math.random() * 10) + 1,
-        park: Math.floor(Math.random() * 10) + 1,
-        grocery: Math.floor(Math.random() * 10) + 1,
-        nightlife: Math.floor(Math.random() * 10) + 1,
-        restaurant: Math.floor(Math.random() * 10) + 1,
-      },
-    };
+    return extractCityAndFilters(input);
   };
 
 const simulateChatGPTAndSend = async (inputText) => {
