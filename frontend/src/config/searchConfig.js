@@ -1,13 +1,13 @@
 // Search configuration settings
 export const searchConfig = {
   // Number of search results to return
-  topK: 300,
+  topK: 2500,
   
   // Softmax temperature for score normalization
-  softmaxTemperature: 0.07,
+  softmaxTemperature: 0.01,
   
   // Heatmap intensity multiplier for visualization
-  heatmapIntensityMultiplier: 100,
+  heatmapIntensityMultiplier: 1000,
   
   // Default search parameters
   defaultParams: {
