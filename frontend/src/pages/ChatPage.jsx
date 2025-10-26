@@ -27,8 +27,7 @@ const [heatmapScores, setHeatmapScores] = useState([]);
     amenities.forEach(({ id }) => (initial[id] = true));
     return initial;
   });
-  const [heatmapArray, setHeatmapArray] = useState([]);
-const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
 const [returnedQuery, setReturnedQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [updateTimeout, setUpdateTimeout] = useState(null);
@@ -109,7 +108,7 @@ const simulateChatGPTAndSend = async (inputText) => {
     }
   }
   try {
-    const res = await fetch('http://localhost:8000/api/search', {
+    const res = await fetch(getApiEndpoint('/search'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -122,7 +121,7 @@ const simulateChatGPTAndSend = async (inputText) => {
 
     setReturnedQuery(data.query);
     setSearchResults(data.results);
-    setHeatmapArray(data.heatmap_scores);
+    setHeatmapScores(data.heatmap_scores);
   } catch (err) {
     console.error('Backend update failed:', err);
   }
