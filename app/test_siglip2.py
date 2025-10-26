@@ -2,7 +2,7 @@
 
 from feature_extractors import *
 
-extractor = FeatureExtractorFactory.create_extractor(model_name="google/siglip2-base-patch16-512", device="cuda")
+extractor = FeatureExtractorFactory.create_extractor(model_name="google/siglip2-base-patch16-512", device="cpu")
 print(extractor)
 
 text = "test text"
