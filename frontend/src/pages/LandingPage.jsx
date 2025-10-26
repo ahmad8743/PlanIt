@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getApiEndpoint } from '../config/apiConfig';
 import '../styles/Landing.css';
 import { searchConfig } from '../config/searchConfig';
 

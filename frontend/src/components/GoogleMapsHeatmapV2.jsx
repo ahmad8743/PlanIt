@@ -1,6 +1,7 @@
 /* global google */
 import React, { useState, useEffect, useRef } from 'react';
 import { searchConfig } from '../config/searchConfig';
+import { GOOGLE_MAPS_API_KEY } from "../creds.js";
 
 const mapContainerStyle = {
   width: '100%',
@@ -12,7 +13,7 @@ const mapContainerStyle = {
 const defaultCenter = searchConfig.map.defaultCenter;
 
 export default function GoogleMapsHeatmapV2({ searchResults, heatmapScores, loading }) {
-  const googleMapsApiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+  const googleMapsApiKey = GOOGLE_MAPS_API_KEY;
 
   const [heatmapRadius, setHeatmapRadius] = useState(searchConfig.heatmap.defaultRadius);
   const [heatmapOpacity, setHeatmapOpacity] = useState(searchConfig.heatmap.defaultOpacity);

@@ -15,6 +15,8 @@ seen_coords = set()
 seen_pano_ids = set()
 seen_lock = threading.Lock()
 
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'creds'))
 from creds import GOOGLE_MAPS_API_KEY
 
 IMAGE_FOLDER = './images'

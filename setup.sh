@@ -50,30 +50,14 @@ mkdir -p images
 mkdir -p models
 mkdir -p logs
 
-# Copy environment file
-if [ ! -f .env ]; then
-    echo "📝 Creating .env file from template..."
-    cp env.example .env
-    echo "⚠️  Please edit .env file and add your Google Maps API key"
-fi
 
-# Create creds.py for street view sampling
-if [ ! -f street-view-sampling/creds.py ]; then
-    echo "📝 Creating creds.py template..."
-    cat > street-view-sampling/creds.py << EOF
-# Add your Google Maps API key here
-GOOGLE_MAPS_API_KEY = "your_google_maps_api_key_here"
-EOF
-    echo "⚠️  Please edit street-view-sampling/creds.py and add your Google Maps API key"
-fi
 
 echo ""
 echo "🎉 Environment setup complete!"
 echo ""
 echo "Next steps:"
-echo "1. Edit .env file and add your Google Maps API key"
-echo "2. Edit street-view-sampling/creds.py and add your Google Maps API key"
-echo "3. Run './start.sh' to start the development servers"
+echo "1. Create a creds directory and add creds.py file with the following variables: GOOGLE_MAPS_API_KEY, ZILLIZ_URI, ZILLIZ_TOKEN, ZILLIZ_COLLECTION"
+echo "2. Create a creds.js file with the following variables: GOOGLE_MAPS_API_KEY"
 echo ""
 echo "Available commands:"
 echo "  ./start.sh          - Start both frontend and backend"

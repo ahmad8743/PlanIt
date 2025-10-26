@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { getApiEndpoint } from '../config/apiConfig';
 import GoogleMapsHeatmapV2 from '../components/GoogleMapsHeatmapV2';
 import '../styles/Landing.css';
 import { searchConfig } from '../config/searchConfig';
+
 
 const amenities = [
   { id: 'bus', label: 'Bus Stops', icon: '🚌' },
