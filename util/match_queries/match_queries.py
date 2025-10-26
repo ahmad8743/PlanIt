@@ -18,7 +18,6 @@ def extract_city_and_filters(prompt: str) -> dict:
     "I want a house in Ferguson within 5 miles of a school and 3 miles of a park"
     Returns:
     {
-        "city": "Ferguson",
         "filters": {
             "school": 5,
             "park": 3
@@ -29,7 +28,6 @@ def extract_city_and_filters(prompt: str) -> dict:
         "You are a helpful assistant that extracts a city and amenities with distances "
         "from a user's request. Only output JSON in this exact structure:\n\n"
         "{\n"
-        "  \"city\": \"CityName\",            // null if not mentioned\n"
         "  \"filters\": {\n"
         "    \"category1\": distance_in_miles,\n"
         "    \"category2\": distance_in_miles\n"

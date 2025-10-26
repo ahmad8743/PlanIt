@@ -29,7 +29,6 @@ export default function SearchHeatmapWithSliders() {
   const location = useLocation();
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
-  const [parsedCity, setParsedCity] = useState('');
   const [amenityRadii, setAmenityRadii] = useState({});
   const [activeFilters, setActiveFilters] = useState(() => {
     const initial = {};
@@ -51,7 +50,6 @@ export default function SearchHeatmapWithSliders() {
       const incomingCity = location.state.city || '';
       const incomingActiveFilters = location.state.activeFilters || {};
 
-      setParsedCity(incomingCity);
       setAmenityRadii(incomingFilters);
       setActiveFilters((prev) => ({ ...prev, ...incomingActiveFilters }));
 
@@ -65,7 +63,7 @@ export default function SearchHeatmapWithSliders() {
     if (!inputText || inputText.trim() === '') return;
 
     const simulatedParsed = await simulateChatGPT(inputText);
-    setParsedCity(simulatedParsed.city);
+
     setAmenityRadii(simulatedParsed.filters);
 
     const initialActive = {};
@@ -84,7 +82,7 @@ export default function SearchHeatmapWithSliders() {
   const toggleAmenity = (id) => {
     setActiveFilters((prev) => {
       const updated = { ...prev, [id]: !prev[id] };
-      setTimeout(() => callBackendWithCurrentFilters(amenityRadii, updated, parsedCity), 0);
+      setTimeout(() => callBackendWithCurrentFilters(amenityRadii, updated), 0);
       return updated;
     });
   };
@@ -99,7 +97,7 @@ export default function SearchHeatmapWithSliders() {
   };
 
   const callBackendWithCurrentFilters = async (filtersObj, filtersState, cityOverride = null) => {
-    const city = cityOverride || parsedCity;
+
     const active = {};
     for (const key in filtersObj) {
       if (filtersState[key]) {
@@ -157,9 +155,7 @@ const getCombinedHeatmapScores = () => {
       <div className="chat-heatmap-container">
         <div className="container">
           <h1 className="heatmap-title">AI-Generated Heatmap</h1>
-          <p className="heatmap-subtitle">
-            Based on: <strong>{parsedCity || '...'}</strong>
-          </p>
+
           <div className="heatmap-box">
             <GoogleMapsHeatmapV2
               searchResults={searchResults}
