@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import sys
 import os
-sys.path.append(os.path.join(os.getcwd(), '..', 'street-view-sampling'))
+sys.path.append(os.path.join(os.getcwd(), '..', 'creds'))
 import creds
 
 from pymilvus import MilvusClient

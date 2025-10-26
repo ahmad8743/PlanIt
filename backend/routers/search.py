@@ -12,7 +12,7 @@ load_dotenv()
 
 # Import the feature extractor
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'util'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'util', 'street-view-sampling'))
 import creds
 from feature_extractors import SigLIP2FeatureExtractor
 

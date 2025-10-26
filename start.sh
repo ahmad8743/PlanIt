@@ -12,11 +12,6 @@ fi
 # Activate virtual environment
 source venv/bin/activate
 
-# Check if .env file exists
-if [ ! -f ".env" ]; then
-    echo "❌ .env file not found. Please run './setup.sh' first."
-    exit 1
-fi
 
 # Start backend in background
 echo "🔧 Starting backend server..."

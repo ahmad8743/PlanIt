@@ -3,6 +3,9 @@ import requests
 import csv
 from math import radians, cos, sin, atan2, sqrt, degrees
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'creds'))
 from creds import GOOGLE_MAPS_API_KEY
 
 def parse_coord(s):
