@@ -149,8 +149,13 @@ def get_searcher():
     global searcher
     if searcher is None:
         try:
+            print("🔧 Initializing SigLIP2Searcher...")
             searcher = SigLIP2Searcher()
+            print("✅ SigLIP2Searcher initialized successfully")
         except Exception as e:
+            import traceback
+            error_msg = f"Failed to initialize searcher: {str(e)}\n{traceback.format_exc()}"
+            print(f"❌ {error_msg}")
             raise HTTPException(status_code=500, detail=f"Failed to initialize searcher: {str(e)}")
     return searcher
 
@@ -175,6 +180,7 @@ def apply_softmax(scores: List[float], temperature: float = 1.0) -> List[float]:
 def search_locations(request: SearchRequest):
     """Search for locations using SigLIP2 embeddings."""
     try:
+        print(f"🔍 Received search request: query='{request.query}', top_k={request.top_k}, temperature={request.softmax_temperature}")
         searcher_instance = get_searcher()
         
         # Perform search
@@ -198,6 +204,7 @@ def search_locations(request: SearchRequest):
         for i, result in enumerate(results):
             result['heatmap_score'] = heatmap_scores[i]
         
+        print(f"✅ Search completed: {len(results)} results found")
         return SearchResponse(
             status="success",
             query=request.query,
@@ -206,6 +213,9 @@ def search_locations(request: SearchRequest):
         )
         
     except Exception as e:
+        import traceback
+        error_msg = f"Search error: {str(e)}\n{traceback.format_exc()}"
+        print(f"❌ {error_msg}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/health")

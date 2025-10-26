@@ -32,11 +32,11 @@ export default function SearchHeatmapPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-            body: JSON.stringify({
-              query: query,
-              top_k: searchConfig.topK,
-              softmax_temperature: searchConfig.softmaxTemperature
-            }),
+        body: JSON.stringify({
+          query: query,
+          top_k: searchConfig.topK,
+          softmax_temperature: searchConfig.softmaxTemperature
+        }),
       });
 
       if (!response.ok) {
@@ -57,6 +57,11 @@ export default function SearchHeatmapPage() {
     } catch (err) {
       setError(err.message);
       console.error('Search error:', err);
+      console.error('Error details:', {
+        message: err.message,
+        name: err.name,
+        stack: err.stack
+      });
     } finally {
       setLoading(false);
     }
