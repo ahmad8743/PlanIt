@@ -28,42 +28,52 @@ export default function LandingPage() {
     return extractCityAndFilters(input);
   };
 
-  const handleGenerateClick = async () => {
-    if (!searchQuery.trim()) {
-      return;
-    }
-  
-    // 1. Simulate sending to ChatGPT → return fake JSON
-    const simulatedParsed = simulateChatGPT(searchQuery);
-  
-    // 2. Send JSON to FastAPI backend
-    try {
-      const response = await fetch("http://localhost:8000/api/search", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: searchQuery,
-          top_k: searchConfig.topK,
-          softmax_temperature: searchConfig.softmaxTemperature
-        }),
-      });
-  
-      const data = await response.json();
-  
-      // 3. Navigate to /chat with backend response + original query
-     navigate("/chat", {
-  state: {
-    query: data.query,
-    results: data.results,
-    heatmapArray: data.heatmap_scores,
-  },
-});
-    } catch (error) {
-      console.error("Error calling backend:", error);
-    }
-  };
+const handleGenerateClick = async () => {
+  if (!searchQuery.trim()) return;
+
+  try {
+    // Step 1: Extract filters using AI
+    const simulatedParsed = await extractCityAndFilters(searchQuery);
+    const parsedCity = simulatedParsed.city;
+    const filters = simulatedParsed.filters || {};
+
+    // Step 2: Activate all filters that were extracted
+    const activeFilters = {};
+    Object.keys(filters).forEach((key) => {
+      activeFilters[key] = true;
+    });
+
+    // Step 3: Send the parsed filters to backend
+    const response = await fetch("http://localhost:8000/api/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: searchQuery,
+        top_k: searchConfig.topK,
+        softmax_temperature: searchConfig.softmaxTemperature
+      }),
+    });
+
+    const data = await response.json();
+
+    // Step 4: Navigate to /chat with everything needed
+    navigate("/chat", {
+      state: {
+        query: searchQuery,
+        results: data.results,
+        heatmapArray: data.heatmap_scores,
+        filters: filters,
+        city: parsedCity,
+        activeFilters: activeFilters
+      },
+    });
+
+  } catch (error) {
+    console.error("🔥 Error during AI parse or backend search:", error);
+  }
+};
 
   return (
     <div className="App">

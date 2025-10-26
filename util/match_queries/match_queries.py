@@ -1,7 +1,10 @@
 # extract_filters.py
 import json
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'creds'))
 from openai import OpenAI
-from .apikeys import OpenAI_KEY
+from creds import OpenAI_KEY
 
 # Initialize OpenAI client
 client = OpenAI(api_key=OpenAI_KEY)

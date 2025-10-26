@@ -49,7 +49,17 @@ useEffect(() => {
   if (!hasInitialized && location.state?.query) {
     setHasInitialized(true);
     setQuery(location.state.query);
-    //simulateChatGPTAndSend(location.state.query);
+
+    // ✅ Load filters and city from landing page state
+    const incomingFilters = location.state.filters || {};
+    const incomingCity = location.state.city || '';
+    const incomingActiveFilters = location.state.activeFilters || {};
+
+    setParsedCity(incomingCity);
+    setAmenityRadii(incomingFilters);
+    setActiveFilters((prev) => ({ ...prev, ...incomingActiveFilters }));
+
+    callBackendWithCurrentFilters(incomingFilters, incomingActiveFilters, incomingCity);
   }
 }, [hasInitialized, location.state]);
 
@@ -61,7 +71,7 @@ useEffect(() => {
 const simulateChatGPTAndSend = async (inputText) => {
   if (!inputText || inputText.trim() === '') return;
 
-  const simulatedParsed = simulateChatGPT(inputText);
+  const simulatedParsed = await simulateChatGPT(inputText);
   setParsedCity(simulatedParsed.city);
   setAmenityRadii(simulatedParsed.filters);
 
