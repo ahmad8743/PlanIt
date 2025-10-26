@@ -1,7 +1,7 @@
 /* global google */
 import React, { useState, useEffect, useRef } from 'react';
 import { searchConfig } from '../config/searchConfig';
-import { GOOGLE_MAPS_API_KEY } from "@planit-creds/creds.js";
+import { GOOGLE_MAPS_API_KEY } from "../creds.js";
 
 const mapContainerStyle = {
   width: '100%',
