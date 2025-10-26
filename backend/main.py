@@ -11,7 +11,7 @@ app = FastAPI(
 # Enable CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://ec2-3-21-204-210.us-east-2.compute.amazonaws.com:3000"],  # Replace with ["http://localhost:3000"] in production
+    allow_origins=["https://0.0.0.0:3000"],  # Replace with ["http://localhost:3000"] in production
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
